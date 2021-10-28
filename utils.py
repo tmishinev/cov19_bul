@@ -4,10 +4,10 @@ import plotly.graph_objects as go
 import numpy as np
 
 def load_overall_data():
-    df_tests = pd.read_csv('data/Разпределение по видове тестове.csv')
-    df_overall = pd.read_csv('data/Обща статистика за разпространението.csv')
-    #df_tests = pd.read_csv('https://data.egov.bg/resource/download/0ce4e9c3-5dfc-46e2-b4ab-42d840caab92/csv')
-    #df_overall = pd.read_csv('https://data.egov.bg/resource/download/e59f95dd-afde-43af-83c8-ea2916badd19/csv')
+    #df_tests = pd.read_csv('data/Разпределение по видове тестове.csv')
+    #df_overall = pd.read_csv('data/Обща статистика за разпространението.csv')
+    df_tests = pd.read_csv('https://data.egov.bg/resource/download/0ce4e9c3-5dfc-46e2-b4ab-42d840caab92/csv')
+    df_overall = pd.read_csv('https://data.egov.bg/resource/download/e59f95dd-afde-43af-83c8-ea2916badd19/csv')
 
     #transform test data
     df_date = df_tests.loc[:, ['Дата',
@@ -56,8 +56,9 @@ def load_overall_data():
 
 def load_sexage():
 
-    #df_deaths_agesex = pd.read_csv('https://data.egov.bg/resource/download/18851aca-4c9d-410d-8211-0b725a70bcfd/csv')
-    df_deaths_agesex = pd.read_csv('data/Починали по пол и възрастови групи.csv')
+    df_deaths_agesex = pd.read_csv('https://data.egov.bg/resource/download/18851aca-4c9d-410d-8211-0b725a70bcfd/csv')
+    #df_deaths_agesex = pd.read_csv('data/Починали по пол и възрастови групи.csv')
+
     df_deaths_agesex.rename(columns = {'Дата' : 'date', 'Пол': 'sex', 'Възрастова група': 'age_group', 'Брой починали': 'deaths'}, inplace = True)
     df_deaths_agesex['date'] = pd.to_datetime(df_deaths_agesex['date'])
     df_deaths_agesex.set_index('date', inplace = True)
