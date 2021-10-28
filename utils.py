@@ -164,7 +164,7 @@ def get_chart(startdate, enddate, df_date, cols,  color, linestyle, name, title)
 
     return fig
 
-def get_age_hist(startdate, enddate,df_deaths_sexage):
+def get_age_hist(startdate, enddate,df_deaths_sexage, color):
     df_deaths_sexage = df_deaths_sexage.loc[startdate : enddate]
     df_deaths_agesex_group = df_deaths_sexage.groupby(['sex', 'age_group']).sum()
     df_deaths_agesex_group.reset_index(inplace = True)
@@ -172,8 +172,8 @@ def get_age_hist(startdate, enddate,df_deaths_sexage):
     fig = go.Figure()
     fig = px.bar(df_deaths_agesex_group, x = 'age_group', y = 'deaths', color = 'sex', barmode="group",opacity = 0.6, pattern_shape="sex",
                 color_discrete_map={
-                    'female': 'black',
-                    'male': 'black'})
+                    'male': color[0],
+                    'female': color[1]})
     fig.update_layout( title = 'Deaths by Age Group', xaxis = XAXIS,yaxis = YAXIS, legend = LEGEND,  plot_bgcolor='white')
 
     return fig

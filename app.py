@@ -117,20 +117,22 @@ app.layout = html.Div([
 )
 def death_hist(date_values):
 
-     
+    clr1 = 'blue'
+    clr2 = 'red'
+    clr3 = 'green'    
     
     date_values[0] = unixToDatetime(date_values[0])
     date_values[1] = unixToDatetime(date_values[1])
-    fig1 = get_chart(date_values[0], date_values[1], df, ['new_cases_roll7', 'all_hospitalized'], ['black', 'black'], ['solid', 'dash'], ['New Cases', 'Hospitalized'], 'New Cases / Hospitalized')
-    fig2 = get_chart(date_values[0], date_values[1], df, ['deaths_roll7', 'icu'], ['black', 'black'], ['solid', 'dash'], ['Deaths', 'ICU load'], 'Deaths / ICU load')
-    fig3 = get_chart(date_values[0], date_values[1], df, ['perc_PCR_roll7', 'perc_AG_roll7', 'perc_tests_roll7'], ['black', 'black', 'black'], ['dash', 'dot', 'solid'], ['PCR', 'Antigen', 'All'], 'Positive Tests per Type (%)')
-    fig4 = get_chart(date_values[0], date_values[1], df, ['num_PCR_roll7', 'num_AG_roll7'], ['black', 'black'], ['dash', 'dot'], ['PCR', 'Antigen'], 'Total Number of Test per Type')
-    fig5= get_age_hist(date_values[0], date_values[1],df_deaths_sexage)
-    fig6 = get_chart(date_values[0], date_values[1], df_death_grsex, ['deaths_male_roll7', 'deaths_female_roll7'], ['black', 'black'], ['solid', 'dash'], ['Male Deaths', 'Felame Deaths'], 'Male/Female Deaths')
+    fig1 = get_chart(date_values[0], date_values[1], df, ['new_cases_roll7', 'all_hospitalized'], [clr1, clr2], ['solid', 'dash'], ['New Cases', 'Hospitalized'], 'New Cases / Hospitalized')
+    fig2 = get_chart(date_values[0], date_values[1], df, ['deaths_roll7', 'icu'], [clr1, clr2], ['solid', 'dash'], ['Deaths', 'ICU load'], 'Deaths / ICU load')
+    fig3 = get_chart(date_values[0], date_values[1], df, ['perc_PCR_roll7', 'perc_AG_roll7', 'perc_tests_roll7'], [clr1, clr2, clr3], ['dash', 'dot', 'solid'], ['PCR', 'Antigen', 'All'], 'Positive Tests per Type (%)')
+    fig4 = get_chart(date_values[0], date_values[1], df, ['num_PCR_roll7', 'num_AG_roll7'], [clr1, clr2], ['dash', 'dot'], ['PCR', 'Antigen'], 'Total Number of Test per Type')
+    fig5= get_age_hist(date_values[0], date_values[1],df_deaths_sexage,[clr1, clr2])
+    fig6 = get_chart(date_values[0], date_values[1], df_death_grsex, ['deaths_male_roll7', 'deaths_female_roll7'], [clr1, clr2], ['solid', 'dash'], ['Male Deaths', 'Felame Deaths'], 'Male/Female Deaths')
 
     return fig1, fig2, fig3, fig4, fig5,  fig6
 
 
 
 
-app.run_server(debug=True, use_reloader=False, host="0.0.0.0", port=8051)
+app.run_server(debug=True, use_reloader=False, host="0.0.0.0", port=8080)
