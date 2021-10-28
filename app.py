@@ -6,6 +6,8 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 import dash
 import numpy as np
+from flask_caching import Cache
+import os
 
 import time
 
@@ -30,8 +32,27 @@ def get_marks():
             marks[unixTimeMillis(pd.to_datetime(point))] =  { 'label' : point, "style": {"transform": "rotate(60deg)",  "padding-top" : '20px'}}
     return marks
 
+CACHE_CONFIG = {
+    # try 'FileSystemCache' if you don't want to setup redis
+    'CACHE_TYPE': 'redis',
+    'CACHE_REDIS_URL': os.environ.get('REDIS_URL', 'redis://localhost:6379')
+}
+
+
 app = dash.Dash(__name__, external_stylesheets = [dbc.themes.LUX])
 server = app.server
+
+
+cache = Cache()
+cache.init_app(app.server, config=CACHE_CONFIG)
+
+
+#load datasets
+@cache.memoize()
+def global_store():
+    df = load_overall_data()
+    df_deaths_sexage, df_death_grsex = load_sexage()
+    return df, df_deaths_sexage, df_death_grsex
 
 app.layout = html.Div([
 
@@ -55,19 +76,19 @@ app.layout = html.Div([
                                                         )], style = {'height' : '80px'}),
                                        
                                         html.Hr()
-                                        ], width = {'size': 5, 'offset': 1 }
+                                        ], width = {'size': 6, 'offset': 1 }
                                         ),
                         ),
                         dbc.Row([
 
                                 dbc.Col([
 
-                                            dcc.Graph(id = 'fig1', figure={})
+                                            dbc.Spinner(dcc.Graph(id = 'fig1', figure={}))
                                 ], width = {'size': 5, 'offset': 1}),
 
                                 dbc.Col([
 
-                                            dcc.Graph(id = 'fig2',figure={})
+                                            dbc.Spinner(dcc.Graph(id = 'fig2',figure={}))
                                 ], width = {'size': 5, 'offset': 0})
             
                         ]),
@@ -76,12 +97,12 @@ app.layout = html.Div([
 
                                 dbc.Col([
 
-                                            dcc.Graph(id = 'fig3',figure={})
+                                            dbc.Spinner(dcc.Graph(id = 'fig3',figure={}))
                                 ], width = {'size': 5, 'offset': 1}),
 
                                 dbc.Col([
 
-                                            dcc.Graph(id = 'fig4',figure={})
+                                            dbc.Spinner(dcc.Graph(id = 'fig4',figure={}))
                                 ], width = {'size': 5, 'offset': 0})
             
                         ]),
@@ -89,13 +110,13 @@ app.layout = html.Div([
                         dbc.Row([
 
                                 dbc.Col([
-                                            dcc.Graph(id = 'fig5', figure={})
+                                            dbc.Spinner(dcc.Graph(id = 'fig5', figure={}))
                                             
                                 ], width = {'size': 5, 'offset': 1}),
 
                                 dbc.Col([
 
-                                            dcc.Graph(id = 'fig6', figure={})
+                                            dbc.Spinner(dcc.Graph(id = 'fig6', figure={}))
                                 ], width = {'size': 5, 'offset': 0})
             
                         ])
