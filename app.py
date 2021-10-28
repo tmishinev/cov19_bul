@@ -30,12 +30,6 @@ def get_marks():
             marks[unixTimeMillis(pd.to_datetime(point))] =  { 'label' : point, "style": {"transform": "rotate(60deg)",  "padding-top" : '20px'}}
     return marks
 
-
-
-
-
-
-
 app = dash.Dash(__name__, external_stylesheets = [dbc.themes.LUX])
 server = app.server
 
