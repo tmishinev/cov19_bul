@@ -13,7 +13,7 @@ from datetime import datetime
 
 df = load_overall_data()
 df_deaths_sexage, df_death_grsex = load_sexage()
-map, df_area = load_region_data()
+df_area, regions = load_region_data()
 
 def unixTimeMillis(dt):
     ''' Convert datetime to unix timestamp '''
@@ -59,7 +59,7 @@ app.layout = html.Div([
 
                                 dbc.Col([
                                             html.H5('Active Cases per 100k Population (click to select region):'),
-                                            dbc.Spinner(dcc.Graph(id = 'graph_map', figure={}, style = {'height' : '400px'}))
+                                            dbc.Spinner(dcc.Graph(id = 'graph_map', figure=get_map(df_area, regions), style = {'height' : '400px'}))
                                 ], width = {'size': 6, 'offset': 1}),
 
                                 dbc.Col([   
@@ -171,16 +171,18 @@ def select_region(selectedData):
 
 #@@@ Callbacks
 @app.callback(
-    [Output('html_update', 'children'), Output('graph_map', 'figure')],
+    Output('html_update', 'children'),
     [Input("interval_update", "n_intervals")]
 )
 def interval_data(interval):
-    global df, df_death_grsex, df_deaths_sexage, df_area
-
-    df = load_overall_data()
-    df_deaths_sexage, df_death_grsex = load_sexage()
-    fig, df_area = load_region_data()
-    return 'Data Updated: ' + datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), fig
+    global df, df_death_grsex, df_deaths_sexage, df_area, regions
+    text = 'initial load'
+    if interval !=0:
+        df = load_overall_data()
+        df_deaths_sexage, df_death_grsex = load_sexage()
+        df_area, regions = load_region_data()
+        text = 'Data Updated: ' + datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+    return text
 
 @app.callback(
     [Output('fig1', 'figure'),Output('fig2', 'figure'), Output('fig3', 'figure'),Output('fig4', 'figure'),Output('fig5', 'figure'), Output('fig6', 'figure')],

@@ -33,11 +33,16 @@ def load_region_data():
     df_areas_full['active_cases_per_100k'] = round(df_areas_full['active_cases']/(df_areas_full['POPULATION']/100000),0)
     df_areas_full.drop(columns = ['variable_x', 'variable_y'], inplace = True)
 
+      
+    
+    return df_areas_full, regions
+
+def get_map(df_areas_full, regions):
+
     token = 'pk.eyJ1IjoiaTEyZmx5IiwiYSI6ImNrdGZwejk5aTBhbXoyb211cWswc3pjaHkifQ.j5ysSfwAGc267jYv3PGjlw'
     mapbox_style = 'outdoors'
 
     df_areas_map= df_areas_full.loc[df_areas_full.index.max()]
-
     fig  = px.choropleth_mapbox(df_areas_map,
                             geojson= regions,
                             locations='REG',
@@ -55,8 +60,8 @@ def load_region_data():
 
     fig.update_layout(mapbox_style=mapbox_style, mapbox_accesstoken=token, legend=dict(y=0.95), coloraxis = dict(colorbar = dict(title = '')), title = 'Active Cases per 100k Population')
     fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
-    
-    return fig, df_areas_full
+
+    return fig
 
 def load_overall_data():
     #df_tests = pd.read_csv('data/Разпределение по видове тестове.csv')
