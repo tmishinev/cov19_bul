@@ -6,13 +6,14 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 import dash
 import numpy as np
-from flask_caching import Cache
 import os
-
 import time
+from datetime import datetime
+
 
 df = load_overall_data()
 df_deaths_sexage, df_death_grsex = load_sexage()
+map, df_area = load_region_data()
 
 def unixTimeMillis(dt):
     ''' Convert datetime to unix timestamp '''
@@ -32,39 +33,47 @@ def get_marks():
             marks[unixTimeMillis(pd.to_datetime(point))] =  { 'label' : point, "style": {"transform": "rotate(60deg)",  "padding-top" : '20px'}}
     return marks
 
-CACHE_CONFIG = {
-    # try 'FileSystemCache' if you don't want to setup redis
-    'CACHE_TYPE': 'redis',
-    'CACHE_REDIS_URL': os.environ.get('REDIS_URL', 'redis://localhost:6379')
-}
-
 
 app = dash.Dash(__name__, external_stylesheets = [dbc.themes.LUX])
 server = app.server
-
-
-cache = Cache()
-cache.init_app(app.server, config=CACHE_CONFIG)
-
-
-#load datasets
-@cache.memoize()
-def global_store():
-    df = load_overall_data()
-    df_deaths_sexage, df_death_grsex = load_sexage()
-    return df, df_deaths_sexage, df_death_grsex
 
 app.layout = html.Div([
 
                         dbc.Row([dbc.Col([
                                         html.Hr(),
-                                        html.H3( "Cov-2019 Dashboard Bulgaria", style={'text-align': 'center', 'size' : 10}),
+                                        html.H2( "Cov-2019 Dashboard Bulgaria", style={'text-align': 'center', 'size' : 10}),
                                         html.Hr()
                                         ], width = {'size': 6, 'offset': 3 }
                                         ),
                                         html.Hr()
+                        
                         ]),
+
+                        html.Hr(),
+
+                        dbc.Row([
+                            dbc.Col([
+                                    html.H4('Region Data:')
+                                ], width = {'size': 6, 'offset': 1 })
+                        ]),
+                        dbc.Row([
+
+
+                                dbc.Col([
+                                            html.H5('Active Cases per 100k Population (click to select region):'),
+                                            dbc.Spinner(dcc.Graph(id = 'graph_map', figure={}, style = {'height' : '400px'}))
+                                ], width = {'size': 6, 'offset': 1}),
+
+                                dbc.Col([   
+                                            html.H5(id = 'html_region'),
+                                            dbc.Spinner(dcc.Graph(id = 'reg_fig1',figure={}, style = {'height' : '400px'}))
+                                ], width = {'size': 4, 'offset': 0})
+            
+                        ]),
+                        html.Hr(),
                         dbc.Row(dbc.Col([
+
+                                        html.H4('Country Data:'),
                                         html.H6('Date Range Selection:'),
                                         html.Hr(),
                                         html.Div([
@@ -75,10 +84,15 @@ app.layout = html.Div([
                                                         value=[unixTimeMillis(df.index.min()), unixTimeMillis(df.index.max())]
                                                         )], style = {'height' : '80px'}),
                                        
-                                        html.Hr()
+                                        html.Hr(),
+                                        html.H6(id = 'html_update', children = 'asd'),
+                                        dcc.Interval(id = 'interval_update', interval = 3600*1000, n_intervals = 0)
+                              
                                         ], width = {'size': 6, 'offset': 1 }
                                         ),
                         ),
+                        
+                        
                         dbc.Row([
 
                                 dbc.Col([
@@ -125,9 +139,53 @@ app.layout = html.Div([
 ])
 
 #@@@ Callbacks
+@app.callback(
+    [Output('reg_fig1', 'figure'),Output('html_region', 'children')],
+    [Input('graph_map', 'clickData')]
+)
+def select_region(selectedData):
+    
+    fig = {}
+    clr1 = 'red'
+
+    fig_text = 'Select Region to Display'
+    
+    if selectedData:
+
+        selected_region = selectedData['points'][0]['location']
+
+        fig = go.Figure()
+        df_area_filtered = df_area.loc[df_area['REG'] == selected_region, :]
+        fig.add_trace(go.Scatter( x=df_area_filtered.index, y=df_area_filtered['active_cases_per_100k'], name = 'Active Cases per 100k', 
+                                opacity = 0.6,  line=dict(color=clr1)))
+        # Edit the layout
+        fig.update_layout( xaxis = XAXIS,yaxis = YAXIS, legend = LEGEND,  plot_bgcolor='white', margin=dict(
+        l=0,
+        r=0,
+        b=0,
+        t=0,
+        pad=0
+        ))
+        fig_text = 'Region: ' + selected_region
+
+    return fig,  fig_text
+
+
+#@@@ Callbacks
+@app.callback(
+    [Output('html_update', 'children'), Output('graph_map', 'figure')],
+    [Input("interval_update", "n_intervals")]
+)
+def interval_data(interval):
+    global df, df_death_grsex, df_deaths_sexage, df_area
+
+    df = load_overall_data()
+    df_deaths_sexage, df_death_grsex = load_sexage()
+    fig, df_area = load_region_data()
+    return 'Data Updated: ' + datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), fig
 
 @app.callback(
-    [Output('fig1', 'figure'),Output('fig2', 'figure'), Output('fig3', 'figure'),Output('fig4', 'figure'),Output('fig5', 'figure'), Output('fig6', 'figure'),],
+    [Output('fig1', 'figure'),Output('fig2', 'figure'), Output('fig3', 'figure'),Output('fig4', 'figure'),Output('fig5', 'figure'), Output('fig6', 'figure')],
     [Input("slider_date", "value")]
 )
 def death_hist(date_values):
@@ -150,4 +208,4 @@ def death_hist(date_values):
 
 
 #debug=True, use_reloader=False,
-app.run_server( host="0.0.0.0", port=8080)
+app.run_server( debug=True, use_reloader=False,host="127.0.0.1", port=8080)

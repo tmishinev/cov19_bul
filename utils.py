@@ -2,6 +2,61 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
+import json
+import plotly.express as px
+
+def load_region_data():
+    with open('data/provinces.geojson', 'rb') as f:
+        regions = json.load(f)
+
+    #df_areas = pd.read_csv('data/Разпределение по дата и по области.csv')
+    df_areas = pd.read_csv('https://data.egov.bg/resource/download/cb5d7df0-3066-4d7a-b4a1-ac26525e0f0c/csv')
+
+    df_areas.rename(columns = {'Дата' : 'date'}, inplace = True)
+    df_areas['date'] = pd.to_datetime(df_areas['date'])
+    df_population = pd.read_csv('data/region_population.csv', sep = '\t')
+
+    cols= [k for k in df_areas.columns if '_ALL' in k]
+    df_areas_all = df_areas.melt(id_vars = 'date', value_vars = cols, value_name = 'all_cases')
+    df_areas_all['REG'] = df_areas_all['variable'].str[0:3]
+
+    cols= [k for k in df_areas.columns if '_ACT' in k]
+    df_areas_act = df_areas.melt(id_vars = 'date', value_vars = cols, value_name = 'active_cases')
+    df_areas_act['REG'] = df_areas_act['variable'].str[0:3]
+
+    df_areas_full = df_areas_act.merge(df_areas_all, on = ['date', 'REG'])
+
+    df_areas_full = df_areas_full.merge(df_population, on= 'REG')
+
+    df_areas_full['dt_str'] = df_areas_full['date'].apply(lambda x: x.strftime("%Y-%m-%d"))
+    df_areas_full.set_index('date', inplace = True)
+    df_areas_full['active_cases_per_100k'] = round(df_areas_full['active_cases']/(df_areas_full['POPULATION']/100000),0)
+    df_areas_full.drop(columns = ['variable_x', 'variable_y'], inplace = True)
+
+    token = 'pk.eyJ1IjoiaTEyZmx5IiwiYSI6ImNrdGZwejk5aTBhbXoyb211cWswc3pjaHkifQ.j5ysSfwAGc267jYv3PGjlw'
+    mapbox_style = 'outdoors'
+
+    df_areas_map= df_areas_full.loc[df_areas_full.index.max()]
+
+    fig  = px.choropleth_mapbox(df_areas_map,
+                            geojson= regions,
+                            locations='REG',
+                            featureidkey="properties.nuts3",
+                            color=df_areas_map['active_cases_per_100k'],
+                            color_continuous_scale = 'reds',
+                            range_color=[0,1000],
+                            #hover_name = {'dt_str', 'POPULATION', 'active_cases_per_100k'},
+                            hover_data = {'dt_str', 'POPULATION', 'active_cases', 'active_cases_per_100k'},
+                            zoom=6, 
+                            center={'lat':42.5 , 'lon':25.5 },
+                            opacity=0.6,
+                            animation_frame = 'dt_str'
+                            )
+
+    fig.update_layout(mapbox_style=mapbox_style, mapbox_accesstoken=token, legend=dict(y=0.95), coloraxis = dict(colorbar = dict(title = '')), title = 'Active Cases per 100k Population')
+    fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+    
+    return fig, df_areas_full
 
 def load_overall_data():
     #df_tests = pd.read_csv('data/Разпределение по видове тестове.csv')
@@ -161,7 +216,6 @@ def get_chart(startdate, enddate, df_date, cols,  color, linestyle, name, title)
 
     # Edit the layout
     fig.update_layout( title = title, xaxis = XAXIS,yaxis = YAXIS, legend = LEGEND,  plot_bgcolor='white')
-
 
     return fig
 
