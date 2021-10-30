@@ -208,4 +208,4 @@ def death_hist(date_values):
 
 
 #debug=True, use_reloader=False,
-app.run_server( debug=True, use_reloader=False,host="127.0.0.1", port=8080)
+app.run_server( host="0.0.0.0", port=8080)
