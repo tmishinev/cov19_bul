@@ -49,8 +49,6 @@ app.layout = html.Div([
                         
                         ]),
 
-                        html.Hr(),
-
                         dbc.Row([
                             dbc.Col([
                                     html.H4('Region Data:')
